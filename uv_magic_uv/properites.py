@@ -225,6 +225,18 @@ def init_props(scene):
         default=(0.001, 0.001),
         size=2
     )
+    scene.muv_packuv_stride = FloatProperty(
+        name="Stride",
+        description="Stride UV coordinates",
+        min=-100.0,
+        max=100.0,
+        default=1.0
+    )
+    scene.muv_packuv_apply_pack_uv = BoolProperty(
+        name="Apply Pack UV",
+        description="Apply Pack UV operation intrinsic to Blender itself",
+        default=True
+    )
 
     # Move UV
     scene.muv_mvuv_enabled = BoolProperty(
@@ -498,6 +510,8 @@ def clear_props(scene):
     del scene.muv_packuv_enabled
     del scene.muv_packuv_allowable_center_deviation
     del scene.muv_packuv_allowable_size_deviation
+    del scene.muv_packuv_stride
+    del scene.muv_packuv_apply_pack_uv
 
     # Move UV
     del scene.muv_mvuv_enabled

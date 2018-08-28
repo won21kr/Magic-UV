@@ -116,7 +116,13 @@ class IMAGE_PT_MUV_UVManip(bpy.types.Panel):
                 sc.muv_packuv_allowable_center_deviation
             ops.allowable_size_deviation = \
                 sc.muv_packuv_allowable_size_deviation
+            ops.stride = sc.muv_packuv_stride
+            ops.apply_pack_uv = sc.muv_packuv_apply_pack_uv
             box.label("Allowable Center Deviation:")
             box.prop(sc, "muv_packuv_allowable_center_deviation", text="")
             box.label("Allowable Size Deviation:")
             box.prop(sc, "muv_packuv_allowable_size_deviation", text="")
+            box.label("Stride:")
+            box.prop(sc, "muv_packuv_stride", text="")
+            box.label("Apply Pack UV:")
+            box.prop(sc, "muv_packuv_apply_pack_uv", text="")

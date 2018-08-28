@@ -98,12 +98,25 @@ class MUV_PackUV(bpy.types.Operator):
     )
     allowable_size_deviation = FloatVectorProperty(
         name="Allowable Size Deviation",
-        description="Allowable sizse deviation to judge same UV island",
+        description="Allowable sizes deviation to judge same UV island",
         min=0.000001,
         max=0.1,
         default=(0.001, 0.001),
         size=2
     )
+    stride = FloatProperty(
+        name="Stride",
+        description="Stride UV coordinates",
+        min=-100.0,
+        max=100.0,
+        default=0.0
+    )
+    apply_pack_uv = BoolProperty(
+        name="Apply Pack UV",
+        description="Apply Pack UV operation intrinsic to Blender itself",
+        default=True
+    )
+
 
     @classmethod
     def poll(cls, context):
@@ -134,7 +147,8 @@ class MUV_PackUV(bpy.types.Operator):
                 f['face'].select = True
         bmesh.update_edit_mesh(obj.data)
         bpy.ops.uv.select_all(action='SELECT')
-        bpy.ops.uv.pack_islands(rotate=self.rotate, margin=self.margin)
+        if self.apply_pack_uv:
+            bpy.ops.uv.pack_islands(rotate=self.rotate, margin=self.margin)
 
         # copy/paste UV among same islands
         for gidx in range(num_group):
@@ -142,13 +156,15 @@ class MUV_PackUV(bpy.types.Operator):
                 lambda i, idx=gidx: i['group'] == idx, island_info))
             if len(group) <= 1:
                 continue
-            for g in group[1:]:
+            for stride_idx, g in enumerate(group[1:]):
                 for (src_face, dest_face) in zip(
                         group[0]['sorted'], g['sorted']):
                     for (src_loop, dest_loop) in zip(
                             src_face['face'].loops, dest_face['face'].loops):
-                        loop_lists[dest_loop.index][uv_layer].uv = loop_lists[
-                            src_loop.index][uv_layer].uv
+                        new_uv = loop_lists[src_loop.index][uv_layer].uv
+                        new_uv = new_uv + Vector(((stride_idx + 1) * self.stride,
+                                                  0.0))
+                        loop_lists[dest_loop.index][uv_layer].uv = new_uv
 
         # restore face/UV selection
         bpy.ops.uv.select_all(action='DESELECT')
