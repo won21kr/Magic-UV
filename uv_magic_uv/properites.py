@@ -230,7 +230,7 @@ def init_props(scene):
         description="Stride UV coordinates",
         min=-100.0,
         max=100.0,
-        default=1.0
+        default=0.0
     )
     scene.muv_packuv_apply_pack_uv = BoolProperty(
         name="Apply Pack UV",
