@@ -39,12 +39,14 @@ from ..utils import compatibility as compat
 
 
 def _is_valid_context(context):
-    obj = context.object
+    if compat.check_version(2, 80, 0) < 0:
+        objs = [bpy.context.active_object]
+    else:
+        objs = [o for o in bpy.data.objects
+                if compat.get_object_select(o) and o.type == 'MESH']
 
     # only edit mode is allowed to execute
-    if obj is None:
-        return False
-    if obj.type != 'MESH':
+    if not objs:
         return False
     if context.object.mode != 'EDIT':
         return False
@@ -276,7 +278,7 @@ class _Properties:
     @classmethod
     def init_props(cls, scene):
         class Props():
-            src_info = None
+            src_info = []
 
         scene.muv_props.copy_paste_uv = Props()
         scene.muv_props.copy_paste_uv_selseq = Props()
@@ -343,19 +345,31 @@ class MUV_OT_CopyPasteUV_CopyUV(bpy.types.Operator):
 
     def execute(self, context):
         props = context.scene.muv_props.copy_paste_uv
-        obj = context.active_object
-        bm = common.create_bmesh(obj)
 
-        # get UV layer
-        uv_layers = get_copy_uv_layers(self, bm, self.uv_map)
-        if not uv_layers:
-            return {'CANCELLED'}
+        if compat.check_version(2, 80, 0) < 0:
+            objs = [bpy.context.active_object]
+        else:
+            objs = [o for o in bpy.data.objects
+                    if compat.get_object_select(o) and o.type == 'MESH']
 
-        # get selected face
-        src_info = get_src_face_info(self, bm, uv_layers, True)
-        if src_info is None:
+        props.src_info = []
+        for obj in objs:
+            bm = common.create_bmesh(obj)
+
+            # get UV layer
+            uv_layers = get_copy_uv_layers(self, bm, self.uv_map)
+            if not uv_layers:
+                return {'CANCELLED'}
+
+            # get selected face
+            src_info = get_src_face_info(self, bm, uv_layers, True)
+
+            # Merge
+            props.src_info.append(src_info)
+
+        if not props.src_info:
+            # Any faces are not selected.
             return {'CANCELLED'}
-        props.src_info = src_info
 
         face_count = len(props.src_info[list(props.src_info.keys())[0]])
         self.report({'INFO'}, "{} face(s) are copied".format(face_count))
@@ -379,10 +393,12 @@ class MUV_MT_CopyPasteUV_CopyUV(bpy.types.Menu):
 
     def draw(self, context):
         layout = self.layout
-        # create sub menu
-        obj = context.active_object
-        bm = common.create_bmesh(obj)
-        uv_maps = bm.loops.layers.uv.keys()
+
+        if compat.check_version(2, 80, 0) < 0:
+            objs = [bpy.context.active_object]
+        else:
+            objs = [o for o in bpy.data.objects
+                    if compat.get_object_select(o) and o.type == 'MESH']
 
         ops = layout.operator(MUV_OT_CopyPasteUV_CopyUV.bl_idname,
                               text="[Default]")
@@ -392,9 +408,14 @@ class MUV_MT_CopyPasteUV_CopyUV(bpy.types.Menu):
                               text="[All]")
         ops.uv_map = "__all"
 
-        for m in uv_maps:
-            ops = layout.operator(MUV_OT_CopyPasteUV_CopyUV.bl_idname, text=m)
-            ops.uv_map = m
+        if len(objs) == 1:
+            obj = objs[0]
+            bm = common.create_bmesh(obj)
+            uv_maps = bm.loops.layers.uv.keys()
+            for m in uv_maps:
+                ops = layout.operator(MUV_OT_CopyPasteUV_CopyUV.bl_idname,
+                                      text=m)
+                ops.uv_map = m
 
 
 @BlClassRegistry()
@@ -452,36 +473,49 @@ class MUV_OT_CopyPasteUV_PasteUV(bpy.types.Operator):
         if not props.src_info:
             self.report({'WARNING'}, "Need copy UV at first")
             return {'CANCELLED'}
-        obj = context.active_object
-        bm = common.create_bmesh(obj)
-
-        # get UV layer
-        uv_layers = get_paste_uv_layers(self, obj, bm, props.src_info,
-                                        self.uv_map)
-        if not uv_layers:
-            return {'CANCELLED'}
-
-        # get selected face
-        dest_info = get_dest_face_info(self, bm, uv_layers,
-                                       props.src_info, self.strategy, True)
-        if dest_info is None:
-            return {'CANCELLED'}
-
-        # paste
-        ret = paste_uv(self, bm, props.src_info, dest_info, uv_layers,
-                       self.strategy, self.flip_copied_uv,
-                       self.rotate_copied_uv, self.copy_seams)
-        if ret:
-            return {'CANCELLED'}
-
-        face_count = len(props.src_info[list(dest_info.keys())[0]])
-        self.report({'INFO'}, "{} face(s) are pasted".format(face_count))
-
-        bmesh.update_edit_mesh(obj.data)
 
         if compat.check_version(2, 80, 0) < 0:
-            if self.copy_seams is True:
-                obj.data.show_edge_seams = True
+            objs = [bpy.context.active_object]
+        else:
+            objs = [o for o in bpy.data.objects
+                    if compat.get_object_select(o) and o.type == 'MESH']
+
+        if len(objs) != len(props.src_info):
+            self.report({'WARNING'},
+                        "Number of object must be same between src and dest")
+            return {'CANCELLED'}
+
+        for i, obj in enumerate(objs):
+            src_info = props.src_info[i]
+            bm = common.create_bmesh(obj)
+
+            # get UV layer
+            uv_layers = get_paste_uv_layers(self, obj, bm, src_info,
+                                            self.uv_map)
+            if not uv_layers:
+                return {'CANCELLED'}
+
+            # get selected face
+            dest_info = get_dest_face_info(self, bm, uv_layers,
+                                           src_info, self.strategy, True)
+            if dest_info is None:
+                return {'CANCELLED'}
+
+            # paste
+            ret = paste_uv(self, bm, src_info, dest_info, uv_layers,
+                           self.strategy, self.flip_copied_uv,
+                           self.rotate_copied_uv, self.copy_seams)
+            if ret:
+                return {'CANCELLED'}
+
+            face_count = len(src_info[list(dest_info.keys())[0]])
+            self.report({'INFO'}, "{} face(s) are pasted".format(face_count))
+
+            bmesh.update_edit_mesh(obj.data)
+
+            if compat.check_version(2, 80, 0) < 0:
+                if self.copy_seams is True:
+                    obj.data.show_edge_seams = True
 
         return {'FINISHED'}
 
@@ -507,10 +541,12 @@ class MUV_MT_CopyPasteUV_PasteUV(bpy.types.Menu):
     def draw(self, context):
         sc = context.scene
         layout = self.layout
-        # create sub menu
-        obj = context.active_object
-        bm = common.create_bmesh(obj)
-        uv_maps = bm.loops.layers.uv.keys()
+
+        if compat.check_version(2, 80, 0) < 0:
+            objs = [bpy.context.active_object]
+        else:
+            objs = [o for o in bpy.data.objects
+                    if compat.get_object_select(o) and o.type == 'MESH']
 
         ops = layout.operator(MUV_OT_CopyPasteUV_PasteUV.bl_idname,
                               text="[Default]")
@@ -530,11 +566,16 @@ class MUV_MT_CopyPasteUV_PasteUV(bpy.types.Menu):
         ops.copy_seams = sc.muv_copy_paste_uv_copy_seams
         ops.strategy = sc.muv_copy_paste_uv_strategy
 
-        for m in uv_maps:
-            ops = layout.operator(MUV_OT_CopyPasteUV_PasteUV.bl_idname, text=m)
-            ops.uv_map = m
-            ops.copy_seams = sc.muv_copy_paste_uv_copy_seams
-            ops.strategy = sc.muv_copy_paste_uv_strategy
+        if (objs) == 1:
+            obj = objs[0]
+            bm = common.create_bmesh(obj)
+            uv_maps = bm.loops.layers.uv.keys()
+            for m in uv_maps:
+                ops = layout.operator(MUV_OT_CopyPasteUV_PasteUV.bl_idname,
+                                      text=m)
+                ops.uv_map = m
+                ops.copy_seams = sc.muv_copy_paste_uv_copy_seams
+                ops.strategy = sc.muv_copy_paste_uv_strategy
 
 
 @BlClassRegistry()
