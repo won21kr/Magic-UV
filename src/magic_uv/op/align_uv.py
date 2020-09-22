@@ -1018,3 +1018,40 @@ class MUV_OT_AlignUV_Axis(bpy.types.Operator):
             bmesh.update_edit_mesh(obj.data)
 
         return {'FINISHED'}
+
+
+@BlClassRegistry()
+@compat.make_annotations
+class MUV_OT_AlignUV_Snap(bpy.types.Operator):
+
+    bl_idname = "uv.muv_align_uv_snap"
+    bl_label = "Align UV (Snap)"
+    bl_description = "Align UV to the cursor location"
+    bl_options = {'REGISTER', 'UNDO'}
+
+    def execute(self, context):
+        objs = common.get_uv_editable_objects(context)
+
+        for obj in objs:
+            bm = bmesh.from_edit_mesh(obj.data)
+            if common.check_version(2, 73, 0) >= 0:
+                bm.faces.ensure_lookup_table()
+            uv_layer = bm.loops.layers.uv.verify()
+
+            _, _, space = common.get_space('IMAGE_EDITOR', 'WINDOW',
+                                           'IMAGE_EDITOR')
+            cursor_loc = space.cursor_location
+
+            selected_faces = [f for f in bm.faces if f.select]
+            for face in selected_faces:
+                ave_uv = Vector((0.0, 0.0))
+                for l in face.loops:
+                    ave_uv += l[uv_layer].uv
+                ave_uv /= len(face.loops)
+                diff = cursor_loc - ave_uv
+                for l in face.loops:
+                    l[uv_layer].uv += diff
+
+
+
+        return {'FINISHED'}
