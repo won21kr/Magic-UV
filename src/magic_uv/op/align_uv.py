@@ -1068,7 +1068,7 @@ class MUV_OT_AlignUV_Snap(bpy.types.Operator):
                 for face in selected_faces:
                     for l in face.loops:
                         if l.vert.select:
-                            l[uv_layer].uv = cursor_loc                
+                            l[uv_layer].uv = cursor_loc
             elif self.group == 'FACE':
                 selected_faces = [f for f in bm.faces if f.select]
                 for face in selected_faces:
