@@ -29,6 +29,7 @@ from ..op.align_uv import (
     MUV_OT_AlignUV_Circle,
     MUV_OT_AlignUV_Straighten,
     MUV_OT_AlignUV_Axis,
+    MUV_OT_AlignUV_Snap,
 )
 from ..op.smooth_uv import (
     MUV_OT_SmoothUV,
@@ -67,6 +68,8 @@ class MUV_PT_UVEdit_UVManipulation(bpy.types.Panel):
         box = layout.box()
         box.prop(sc, "muv_align_uv_enabled", text="Align UV")
         if sc.muv_align_uv_enabled:
+            box.label(text="Align:")
+
             col = box.column()
             row = col.row(align=True)
             ops = row.operator(MUV_OT_AlignUV_Circle.bl_idname, text="Circle")
@@ -97,6 +100,14 @@ class MUV_PT_UVEdit_UVManipulation(bpy.types.Panel):
             row.prop(sc, "muv_align_uv_vertical", text="Vertical")
             row.prop(sc, "muv_align_uv_horizontal", text="Horizontal")
             col.prop(sc, "muv_align_uv_mesh_infl", text="Mesh Influence")
+
+            box.separator()
+
+            box.label(text="Snap:")
+            row = box.row(align=True)
+            ops = row.operator(MUV_OT_AlignUV_Snap.bl_idname, text="Snap")
+            ops.group = sc.muv_align_uv_snap_group
+            box.prop(sc, "muv_align_uv_snap_group", text="")
 
         box = layout.box()
         box.prop(sc, "muv_smooth_uv_enabled", text="Smooth UV")

@@ -333,6 +333,16 @@ class _Properties:
             ],
             default='MIDDLE'
         )
+        scene.muv_align_uv_snap_group = EnumProperty(
+            name="Snap Group",
+            description="Group that snap operation applies for",
+            items=[
+                ('VERT', "Vertex", "Vertex"),
+                ('FACE', "Face", "Face"),
+                ('UV_ISLAND', "UV Island", "UV Island"),
+            ],
+            default='FACE'
+        )
 
     @classmethod
     def del_props(cls, scene):
@@ -1029,6 +1039,17 @@ class MUV_OT_AlignUV_Snap(bpy.types.Operator):
     bl_description = "Align UV to the cursor location"
     bl_options = {'REGISTER', 'UNDO'}
 
+    group = EnumProperty(
+        name="Snap Group",
+        description="Group that snap operation applies for",
+        items=[
+            ('VERT', "Vertex", "Vertex"),
+            ('FACE', "Face", "Face"),
+            ('UV_ISLAND', "UV Island", "UV Island"),
+        ],
+        default='FACE'
+    )
+
     def execute(self, context):
         objs = common.get_uv_editable_objects(context)
 
@@ -1042,16 +1063,37 @@ class MUV_OT_AlignUV_Snap(bpy.types.Operator):
                                            'IMAGE_EDITOR')
             cursor_loc = space.cursor_location
 
-            selected_faces = [f for f in bm.faces if f.select]
-            for face in selected_faces:
-                ave_uv = Vector((0.0, 0.0))
-                for l in face.loops:
-                    ave_uv += l[uv_layer].uv
-                ave_uv /= len(face.loops)
-                diff = cursor_loc - ave_uv
-                for l in face.loops:
-                    l[uv_layer].uv += diff
+            if self.group == 'VERT':
+                selected_faces = [f for f in bm.faces if f.select]
+                for face in selected_faces:
+                    for l in face.loops:
+                        if l.vert.select:
+                            l[uv_layer].uv = cursor_loc                
+            elif self.group == 'FACE':
+                selected_faces = [f for f in bm.faces if f.select]
+                for face in selected_faces:
+                    ave_uv = Vector((0.0, 0.0))
+                    for l in face.loops:
+                        ave_uv += l[uv_layer].uv
+                    ave_uv /= len(face.loops)
+                    diff = cursor_loc - ave_uv
+                    for l in face.loops:
+                        l[uv_layer].uv += diff
+            elif self.group == 'UV_ISLAND':
+                islands = common.get_island_info_from_bmesh(bm, only_selected=True)
+                for isl in islands:
+                    ave_uv = Vector((0.0, 0.0))
+                    count = 0
+                    for face in isl["faces"]:
+                        for l in face["face"].loops:
+                            ave_uv += l[uv_layer].uv
+                            count += 1
+                    ave_uv /= count
+                    diff = cursor_loc - ave_uv
+                    for face in isl["faces"]:
+                        for l in face["face"].loops:
+                            l[uv_layer].uv += diff
 
-
+            bmesh.update_edit_mesh(obj.data)
 
         return {'FINISHED'}
