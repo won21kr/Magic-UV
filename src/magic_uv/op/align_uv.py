@@ -1080,7 +1080,8 @@ class MUV_OT_AlignUV_Snap(bpy.types.Operator):
                     for l in face.loops:
                         l[uv_layer].uv += diff
             elif self.group == 'UV_ISLAND':
-                islands = common.get_island_info_from_bmesh(bm, only_selected=True)
+                islands = common.get_island_info_from_bmesh(
+                    bm, only_selected=True)
                 for isl in islands:
                     ave_uv = Vector((0.0, 0.0))
                     count = 0
