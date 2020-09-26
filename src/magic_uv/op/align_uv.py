@@ -27,7 +27,12 @@ import math
 from math import atan2, tan, sin, cos
 
 import bpy
-from bpy.props import EnumProperty, BoolProperty, FloatProperty
+from bpy.props import (
+    EnumProperty,
+    BoolProperty,
+    FloatProperty,
+    FloatVectorProperty,
+)
 import bmesh
 from mathutils import Vector
 
@@ -346,6 +351,16 @@ class _Properties:
             ],
             default='FACE'
         )
+        scene.muv_align_uv_snap_target = FloatVectorProperty(
+            name="Snap Target",
+            description="Target where UV vertices snap to",
+            size=2,
+            precision=4,
+            soft_min=-1.0,
+            soft_max=1.0,
+            step=1,
+            default=(0.000, 0.000),
+        )
 
     @classmethod
     def del_props(cls, scene):
@@ -356,6 +371,8 @@ class _Properties:
         del scene.muv_align_uv_horizontal
         del scene.muv_align_uv_mesh_infl
         del scene.muv_align_uv_location
+        del scene.muv_align_uv_snap_group
+        del scene.muv_align_uv_snap_target
 
 
 @BlClassRegistry()
@@ -1052,6 +1069,16 @@ class MUV_OT_AlignUV_Snap(bpy.types.Operator):
         ],
         default='FACE'
     )
+    target = FloatVectorProperty(
+        name="Snap Target",
+        description="Target where UV vertices snap to",
+        size=2,
+        precision=4,
+        soft_min=-1.0,
+        soft_max=1.0,
+        step=1,
+        default=(0.000, 0.000),
+    )
 
     def execute(self, context):
         objs = common.get_uv_editable_objects(context)
@@ -1062,42 +1089,107 @@ class MUV_OT_AlignUV_Snap(bpy.types.Operator):
                 bm.faces.ensure_lookup_table()
             uv_layer = bm.loops.layers.uv.verify()
 
-            _, _, space = common.get_space('IMAGE_EDITOR', 'WINDOW',
-                                           'IMAGE_EDITOR')
-            cursor_loc = space.cursor_location
-
             if self.group == 'VERT':
                 selected_faces = [f for f in bm.faces if f.select]
+
                 for face in selected_faces:
                     for l in face.loops:
-                        if l.vert.select:
-                            l[uv_layer].uv = cursor_loc
+                        if l[uv_layer].select:
+                            l[uv_layer].uv = self.target
             elif self.group == 'FACE':
                 selected_faces = [f for f in bm.faces if f.select]
+
                 for face in selected_faces:
                     ave_uv = Vector((0.0, 0.0))
+                    some_verts_not_selected = False
                     for l in face.loops:
+                        if not l[uv_layer].select:
+                            some_verts_not_selected = True
                         ave_uv += l[uv_layer].uv
                     ave_uv /= len(face.loops)
-                    diff = cursor_loc - ave_uv
+                    if some_verts_not_selected:
+                        continue
+
+                    diff = Vector(self.target) - ave_uv
                     for l in face.loops:
                         l[uv_layer].uv += diff
             elif self.group == 'UV_ISLAND':
                 islands = common.get_island_info_from_bmesh(
                     bm, only_selected=True)
+
                 for isl in islands:
                     ave_uv = Vector((0.0, 0.0))
                     count = 0
+                    some_verts_not_selected = False
                     for face in isl["faces"]:
                         for l in face["face"].loops:
+                            if not l[uv_layer].select:
+                                some_verts_not_selected = True
                             ave_uv += l[uv_layer].uv
                             count += 1
-                    ave_uv /= count
-                    diff = cursor_loc - ave_uv
+                    if count != 0:
+                        ave_uv /= count
+                    if some_verts_not_selected:
+                        continue
+
+                    diff = Vector(self.target) - ave_uv
                     for face in isl["faces"]:
                         for l in face["face"].loops:
                             l[uv_layer].uv += diff
 
             bmesh.update_edit_mesh(obj.data)
+
+        return {'FINISHED'}
+
+
+@BlClassRegistry()
+@compat.make_annotations
+class MUV_OT_AlignUV_Snap_SetTarget(bpy.types.Operator):
+
+    bl_idname = "uv.muv_align_uv_snap_set_target"
+    bl_label = "Align UV (Snap) Set Target"
+    bl_description = "Set target for 'Align UV (Snap)'"
+    bl_options = {'REGISTER', 'UNDO'}
+
+    target = EnumProperty(
+        name="Snap Target",
+        description="Target where UV vertices snap to",
+        items=[
+            ('CURSOR', "Cursor", "Cursor location"),
+            ('VERTS_AVERAGE', "Average Vertices", "Average of vertices location"),
+        ],
+        default='CURSOR'
+    )
+
+    def execute(self, context):
+        sc = context.scene
+
+        if self.target == 'CURSOR':
+            _, _, space = common.get_space('IMAGE_EDITOR', 'WINDOW',
+                                           'IMAGE_EDITOR')
+            cursor_loc = space.cursor_location
+
+            sc.muv_align_uv_snap_target = cursor_loc
+        elif self.target == 'VERTS_AVERAGE':
+            objs = common.get_uv_editable_objects(context)
+
+            ave_uv = Vector((0.0, 0.0))
+            count = 0
+            for obj in objs:
+                bm = bmesh.from_edit_mesh(obj.data)
+                if common.check_version(2, 73, 0) >= 0:
+                    bm.faces.ensure_lookup_table()
+                uv_layer = bm.loops.layers.uv.verify()
+
+                selected_faces = [f for f in bm.faces if f.select]
+                for face in selected_faces:
+                    for l in face.loops:
+                        if l[uv_layer].select:
+                            ave_uv += l[uv_layer].uv
+                            count += 1
+            if count != 0:
+                ave_uv /= count
+
+            sc.muv_align_uv_snap_target = ave_uv
 
         return {'FINISHED'}
