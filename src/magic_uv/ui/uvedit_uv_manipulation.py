@@ -30,6 +30,7 @@ from ..op.align_uv import (
     MUV_OT_AlignUV_Straighten,
     MUV_OT_AlignUV_Axis,
     MUV_OT_AlignUV_Snap,
+    MUV_OT_AlignUV_Snap_SetTarget,
 )
 from ..op.smooth_uv import (
     MUV_OT_SmoothUV,
@@ -107,7 +108,21 @@ class MUV_PT_UVEdit_UVManipulation(bpy.types.Panel):
             row = box.row(align=True)
             ops = row.operator(MUV_OT_AlignUV_Snap.bl_idname, text="Snap")
             ops.group = sc.muv_align_uv_snap_group
-            box.prop(sc, "muv_align_uv_snap_group", text="")
+            ops.target = sc.muv_align_uv_snap_target
+
+            col = box.column(align=True)
+            row = col.row(align=True)
+            row.prop(sc, "muv_align_uv_snap_group", text="Group")
+
+            col.label(text="Target:")
+            row = col.row(align=True)
+            row.prop(sc, "muv_align_uv_snap_target", text="")
+            ops = row.operator(MUV_OT_AlignUV_Snap_SetTarget.bl_idname,
+                               text="", icon=compat.icon('CURSOR'))
+            ops.target = 'CURSOR'
+            ops = row.operator(MUV_OT_AlignUV_Snap_SetTarget.bl_idname,
+                               text="", icon=compat.icon('UV_VERTEXSEL'))
+            ops.target = 'VERTS_AVERAGE'
 
         box = layout.box()
         box.prop(sc, "muv_smooth_uv_enabled", text="Smooth UV")
