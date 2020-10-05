@@ -29,8 +29,11 @@ from ..op.align_uv import (
     MUV_OT_AlignUV_Circle,
     MUV_OT_AlignUV_Straighten,
     MUV_OT_AlignUV_Axis,
-    MUV_OT_AlignUV_Snap,
-    MUV_OT_AlignUV_Snap_SetTarget,
+    MUV_OT_AlignUV_SnapToPoint,
+    MUV_OT_AlignUV_Snap_SetPointTargetToCursor,
+    MUV_OT_AlignUV_Snap_SetPointTargetToVertexGroup,
+    MUV_OT_AlignUV_SnapToEdge,
+    MUV_OT_AlignUV_Snap_SetEdgeTargetToEdgeCenter,
 )
 from ..op.smooth_uv import (
     MUV_OT_SmoothUV,
@@ -106,23 +109,38 @@ class MUV_PT_UVEdit_UVManipulation(bpy.types.Panel):
 
             box.label(text="Snap:")
             row = box.row(align=True)
-            ops = row.operator(MUV_OT_AlignUV_Snap.bl_idname, text="Snap")
-            ops.group = sc.muv_align_uv_snap_group
-            ops.target = sc.muv_align_uv_snap_target
+            ops = row.operator(MUV_OT_AlignUV_SnapToPoint.bl_idname, text="Snap To Point")
+            ops.group = sc.muv_align_uv_snap_point_group
+            ops.target = sc.muv_align_uv_snap_point_target
 
             col = box.column(align=True)
             row = col.row(align=True)
-            row.prop(sc, "muv_align_uv_snap_group", text="Group")
+            row.prop(sc, "muv_align_uv_snap_point_group", text="Group")
 
             col.label(text="Target:")
             row = col.row(align=True)
-            row.prop(sc, "muv_align_uv_snap_target", text="")
-            ops = row.operator(MUV_OT_AlignUV_Snap_SetTarget.bl_idname,
-                               text="", icon=compat.icon('CURSOR'))
-            ops.target = 'CURSOR'
-            ops = row.operator(MUV_OT_AlignUV_Snap_SetTarget.bl_idname,
-                               text="", icon=compat.icon('UV_VERTEXSEL'))
-            ops.target = 'VERTS_AVERAGE'
+            row.prop(sc, "muv_align_uv_snap_point_target", text="")
+            row.operator(MUV_OT_AlignUV_Snap_SetPointTargetToCursor.bl_idname,
+                         text="", icon=compat.icon('CURSOR'))
+            row.operator(MUV_OT_AlignUV_Snap_SetPointTargetToVertexGroup.bl_idname,
+                         text="", icon=compat.icon('UV_VERTEXSEL'))
+
+            row = box.row(align=True)
+            ops = row.operator(MUV_OT_AlignUV_SnapToEdge.bl_idname, text="Snap To Edge")
+            ops.group = sc.muv_align_uv_snap_edge_group
+            ops.target_1 = sc.muv_align_uv_snap_edge_target_1
+            ops.target_2 = sc.muv_align_uv_snap_edge_target_2
+
+            col = box.column(align=True)
+            row = col.row(align=True)
+            row.prop(sc, "muv_align_uv_snap_edge_group", text="Group")
+
+            col.label(text="Target:")
+            row = col.row(align=True)
+            row.prop(sc, "muv_align_uv_snap_edge_target_1", text="")
+            row.prop(sc, "muv_align_uv_snap_edge_target_2", text="")
+            row.operator(MUV_OT_AlignUV_Snap_SetEdgeTargetToEdgeCenter.bl_idname,
+                         text="", icon=compat.icon('UV_VERTEXSEL'))
 
         box = layout.box()
         box.prop(sc, "muv_smooth_uv_enabled", text="Smooth UV")
