@@ -137,9 +137,9 @@ class MUV_PT_UVEdit_UVManipulation(bpy.types.Panel):
 
             col.label(text="Target:")
             row = col.row(align=True)
-            row.prop(sc, "muv_align_uv_snap_edge_target_1", text="")
-            row.prop(sc, "muv_align_uv_snap_edge_target_2", text="")
-            row.operator(MUV_OT_AlignUV_Snap_SetEdgeTargetToEdgeCenter.bl_idname,
+            col.prop(sc, "muv_align_uv_snap_edge_target_1", text="")
+            col.prop(sc, "muv_align_uv_snap_edge_target_2", text="")
+            col.operator(MUV_OT_AlignUV_Snap_SetEdgeTargetToEdgeCenter.bl_idname,
                          text="", icon=compat.icon('UV_VERTEXSEL'))
 
         box = layout.box()

@@ -362,7 +362,7 @@ class _Properties:
             name="Snap Group (Edge)",
             description="Group that snap (edge) operation applies for",
             items=[
-                ('VERT', "Vertex", "Vertex"),
+                ('EDGE', "Edge", "Edge"),
                 ('FACE', "Face", "Face"),
                 ('UV_ISLAND', "UV Island", "UV Island"),
             ],
@@ -1315,38 +1315,41 @@ class MUV_OT_AlignUV_SnapToEdge(bpy.types.Operator):
         default=(0.000, 0.000),
     )
 
-    def _calc_snap_move_amount(self, edge):
-        ave = (edge.verts[0].co + edge.verts[1].co) / 2
+    def _calc_snap_move_amount(self, loops, uv_layer):
+        ave = (loops[0][uv_layer].uv + loops[1][uv_layer].uv) / 2
         target = (Vector(self.target_1) + Vector(self.target_2)) / 2
         
         return target - ave
 
-    def _get_snap_target_edges(self, context, bm, uv_layer):
-        target_edges = []
+    def _get_snap_target_loop_pairs(self, context, bm, uv_layer):
+        target_loop_pairs = []
 
         if context.tool_settings.use_uv_select_sync:
             selected_edges = [e for e in bm.edges]
         else:
             selected_edges = [e for e in bm.edges if e.select]
 
+        cand_loops = []
         for edge in selected_edges:
-            selected = True
             for l in edge.link_loops:
-                if not l[uv_layer].select:
-                    selected = False
-            if not selected:
-                continue
+                if l[uv_layer].select:
+                    cand_loops.append(l)
 
-            target_edges.append(edge)
+        for l in cand_loops:
+            if l[uv_layer].select and l.link_loop_next[uv_layer].select:
+                d = {l, l.link_loop_next}
+                if d not in target_loop_pairs:
+                    assert l.face == l.link_loop_next.face
+                    target_loop_pairs.append(d)
 
-        return target_edges
+        return target_loop_pairs
 
-    def _find_target_island_from_edge(self, islands, edge):
+    def _find_target_island_from_face(self, islands, face):
         for isl in islands:
-            for f in edge.link_faces
-                if f in isl["faces"]:
+            for f in isl["faces"]:
+                if f["face"] == face:
                     return isl
-        
+
         return None
 
     def execute(self, context):
@@ -1359,65 +1362,69 @@ class MUV_OT_AlignUV_SnapToEdge(bpy.types.Operator):
             uv_layer = bm.loops.layers.uv.verify()
 
             if self.group == 'EDGE':
-                selected_edges = self._get_snap_target_edges(context, bm, uv_layer)
+                target_loop_pairs = self._get_snap_target_loop_pairs(context, bm, uv_layer)
 
-                for edge in selected_edges:
-                    diff = self._calc_snap_move_amount(edge)
+                for pair in target_loop_pairs:
+                    p = list(pair)
+                    diff = self._calc_snap_move_amount(p, uv_layer)
 
                     # Process snap operation.
-                    edge.verts[0] += diff
-                    edge.verts[1] += diff
+                    p[0][uv_layer].uv += diff
+                    p[1][uv_layer].uv += diff
 
             elif self.group == 'FACE':
-                selected_edges = self._get_snap_target_edges(context, bm, uv_layer)
+                target_loop_pairs = self._get_snap_target_loop_pairs(context, bm, uv_layer)
 
                 face_processed = []
-                for edge in selected_edges:
-                    diff = self._calc_snap_move_amount(edge)
+                for pair in target_loop_pairs:
+                    p = list(pair)
+                    diff = self._calc_snap_move_amount(p, uv_layer)
 
                     # Process snap operation.
-                    for f in edge.link_faces:
-                        if f in face_processed:
-                            self.report(
-                                {'WARNING'},
-                                "Must select only one edge per face. (Object: {})"
-                                .format(obj.name)
-                            )
-                            return {'CANCELLED'}
-                        face_processed.append(f)
-                        for l in f.loops:
-                            l[uv_layer].uv += diff
+                    face = p[0].face
+                    if face in face_processed:
+                        self.report(
+                            {'WARNING'},
+                            "Must select only one edge per face. (Object: {})"
+                            .format(obj.name)
+                        )
+                        return {'CANCELLED'}
+                    face_processed.append(face)
+                    for l in face.loops:
+                        l[uv_layer].uv += diff
 
             elif self.group == 'UV_ISLAND':
-                selected_edges = self._get_snap_target_edges(context, bm, uv_layer)
+                target_loop_pairs = self._get_snap_target_loop_pairs(context, bm, uv_layer)
 
                 islands = common.get_island_info_from_bmesh(
                     bm, only_selected=False)
 
                 isl_processed = []
-                for edge in selected_edges:
-                    diff = self._calc_snap_move_amount(edge)
+                for pair in target_loop_pairs:
+                    p = list(pair)                    
+                    diff = self._calc_snap_move_amount(p, uv_layer)
 
                     # Find island to process.
-                    target_isl = self._find_target_island_from_edge(islands, edge)
+                    face = p[0].face
+                    target_isl = self._find_target_island_from_face(islands, face)
                     if target_isl is None:
                         self.report(
                             {'WARNING'},
                             "Failed to find island. (Object: {})".format(obj.name)
                         )
                         return {'CANCELLED'}
-                    if isl in isl_processed:
+                    if target_isl in isl_processed:
                         self.report(
                             {'WARNING'},
                             "Must select only one edge per island. (Object: {})"
                             .format(obj.name)
                         )
                         return {'CANCELLED'}
-                    isl_processed.append(isl)
+                    isl_processed.append(target_isl)
 
                     # Process snap operation.
-                    for f in isl["faces"]:
-                        for l in f.loops:
+                    for f in target_isl["faces"]:
+                        for l in f["face"].loops:
                             l[uv_layer].uv += diff
                 
             bmesh.update_edit_mesh(obj.data)
@@ -1435,25 +1442,28 @@ class MUV_OT_AlignUV_Snap_SetEdgeTargetToEdgeCenter(bpy.types.Operator):
                         'Align UV (Snap to Edge)'"""
     bl_options = {'REGISTER', 'UNDO'}
 
-    def _get_target_edges(self, context, bm, uv_layer):
-        target_edges = []
+    def _get_target_loop_pairs(self, context, bm, uv_layer):
+        target_loop_pairs = []
 
         if context.tool_settings.use_uv_select_sync:
             selected_edges = [e for e in bm.edges]
         else:
             selected_edges = [e for e in bm.edges if e.select]
 
+        cand_loops = []
         for edge in selected_edges:
-            selected = True
             for l in edge.link_loops:
-                if not l[uv_layer].select:
-                    selected = False
-            if not selected:
-                continue
+                if l[uv_layer].select:
+                    cand_loops.append(l)
 
-            target_edges.append(edge)
+        for l in cand_loops:
+            if l[uv_layer].select and l.link_loop_next[uv_layer].select:
+                d = {l, l.link_loop_next}
+                if d not in target_loop_pairs:
+                    assert l.face == l.link_loop_next.face
+                    target_loop_pairs.append(d)
 
-        return target_edges
+        return target_loop_pairs
 
     def execute(self, context):
         sc = context.scene
@@ -1468,10 +1478,13 @@ class MUV_OT_AlignUV_Snap_SetEdgeTargetToEdgeCenter(bpy.types.Operator):
                 bm.faces.ensure_lookup_table()
             uv_layer = bm.loops.layers.uv.verify()
 
-            target_edges = self._get_target_edges(context, bm, uv_layer)
-            for e in target_edges:
-                ave_uv_1 += e.verts[0].co
-                ave_uv_2 += e.verts[1].co
+            target_loop_pairs = self._get_target_loop_pairs(context, bm, uv_layer)
+            for pair in target_loop_pairs:
+                p = list(pair)
+                uv_1 = p[0][uv_layer].uv
+                uv_2 = p[1][uv_layer].uv
+                ave_uv_1 += uv_1
+                ave_uv_2 += uv_2
                 count += 1
 
         if count != 0:
