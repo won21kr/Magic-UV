@@ -341,6 +341,16 @@ class _Properties:
             ],
             default='MIDDLE'
         )
+
+        scene.muv_align_uv_snap_method = EnumProperty(
+            name="Snap Method",
+            description="Snap method",
+            items=[
+                ('POINT', "Point", "Snap to point"),
+                ('EDGE', "Edge", "Snap to edge"),
+            ],
+            default='POINT'
+        )
         scene.muv_align_uv_snap_point_group = EnumProperty(
             name="Snap Group (Point)",
             description="Group that snap (point) operation applies for",
@@ -401,8 +411,11 @@ class _Properties:
         del scene.muv_align_uv_horizontal
         del scene.muv_align_uv_mesh_infl
         del scene.muv_align_uv_location
-        del scene.muv_align_uv_snap_group
-        del scene.muv_align_uv_snap_target
+        del scene.muv_align_uv_snap_point_group
+        del scene.muv_align_uv_snap_point_target
+        del scene.muv_align_uv_snap_edge_group
+        del scene.muv_align_uv_snap_edge_target_1
+        del scene.muv_align_uv_snap_edge_target_2
 
 
 @BlClassRegistry()
@@ -1236,7 +1249,7 @@ class MUV_OT_AlignUV_Snap_SetPointTargetToCursor(bpy.types.Operator):
                                        'IMAGE_EDITOR')
         cursor_loc = space.cursor_location
 
-        sc.muv_align_uv_snap_target = cursor_loc
+        sc.muv_align_uv_snap_point_target = cursor_loc
 
         return {'FINISHED'}
 
@@ -1272,7 +1285,7 @@ class MUV_OT_AlignUV_Snap_SetPointTargetToVertexGroup(bpy.types.Operator):
         if count != 0:
             ave_uv /= count
 
-        sc.muv_align_uv_snap_target = ave_uv
+        sc.muv_align_uv_snap_point_target = ave_uv
 
         return {'FINISHED'}
 
