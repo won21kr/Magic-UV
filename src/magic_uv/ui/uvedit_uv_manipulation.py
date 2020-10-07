@@ -107,40 +107,52 @@ class MUV_PT_UVEdit_UVManipulation(bpy.types.Panel):
 
             box.separator()
 
-            box.label(text="Snap:")
-            row = box.row(align=True)
-            ops = row.operator(MUV_OT_AlignUV_SnapToPoint.bl_idname, text="Snap To Point")
-            ops.group = sc.muv_align_uv_snap_point_group
-            ops.target = sc.muv_align_uv_snap_point_target
+            sp = compat.layout_split(box, factor=0.5)
+            sp.label(text="Snap:")
+            sp = compat.layout_split(sp, factor=1.0)
+            sp.prop(sc, "muv_align_uv_snap_method", text="")
 
-            col = box.column(align=True)
-            row = col.row(align=True)
-            row.prop(sc, "muv_align_uv_snap_point_group", text="Group")
+            if sc.muv_align_uv_snap_method == 'POINT':
+                row = box.row(align=True)
+                ops = row.operator(MUV_OT_AlignUV_SnapToPoint.bl_idname, text="Snap to Point")
+                ops.group = sc.muv_align_uv_snap_point_group
+                ops.target = sc.muv_align_uv_snap_point_target
 
-            col.label(text="Target:")
-            row = col.row(align=True)
-            row.prop(sc, "muv_align_uv_snap_point_target", text="")
-            row.operator(MUV_OT_AlignUV_Snap_SetPointTargetToCursor.bl_idname,
-                         text="", icon=compat.icon('CURSOR'))
-            row.operator(MUV_OT_AlignUV_Snap_SetPointTargetToVertexGroup.bl_idname,
-                         text="", icon=compat.icon('UV_VERTEXSEL'))
+                col = box.column(align=True)
+                row = col.row(align=True)
+                row.prop(sc, "muv_align_uv_snap_point_group", text="Group")
 
-            row = box.row(align=True)
-            ops = row.operator(MUV_OT_AlignUV_SnapToEdge.bl_idname, text="Snap To Edge")
-            ops.group = sc.muv_align_uv_snap_edge_group
-            ops.target_1 = sc.muv_align_uv_snap_edge_target_1
-            ops.target_2 = sc.muv_align_uv_snap_edge_target_2
+                col.label(text="Target Point:")
+                row = col.row(align=True)
+                row.prop(sc, "muv_align_uv_snap_point_target", text="")
+                row.operator(MUV_OT_AlignUV_Snap_SetPointTargetToCursor.bl_idname,
+                            text="", icon=compat.icon('CURSOR'))
+                row.operator(MUV_OT_AlignUV_Snap_SetPointTargetToVertexGroup.bl_idname,
+                            text="", icon=compat.icon('UV_VERTEXSEL'))
 
-            col = box.column(align=True)
-            row = col.row(align=True)
-            row.prop(sc, "muv_align_uv_snap_edge_group", text="Group")
+            elif sc.muv_align_uv_snap_method == 'EDGE':
+                row = box.row(align=True)
+                ops = row.operator(MUV_OT_AlignUV_SnapToEdge.bl_idname, text="Snap to Edge")
+                ops.group = sc.muv_align_uv_snap_edge_group
+                ops.target_1 = sc.muv_align_uv_snap_edge_target_1
+                ops.target_2 = sc.muv_align_uv_snap_edge_target_2
 
-            col.label(text="Target:")
-            row = col.row(align=True)
-            col.prop(sc, "muv_align_uv_snap_edge_target_1", text="")
-            col.prop(sc, "muv_align_uv_snap_edge_target_2", text="")
-            col.operator(MUV_OT_AlignUV_Snap_SetEdgeTargetToEdgeCenter.bl_idname,
-                         text="", icon=compat.icon('UV_VERTEXSEL'))
+                col = box.column(align=True)
+                row = col.row(align=True)
+                row.prop(sc, "muv_align_uv_snap_edge_group", text="Group")
+
+                col.label(text="Target Edge:")
+                sp = compat.layout_split(col, factor=0.33)
+                subcol = sp.column()
+                subcol.label(text="Vertex 1:")
+                subcol.prop(sc, "muv_align_uv_snap_edge_target_1", text="")
+                sp = compat.layout_split(sp, factor=0.5)
+                subcol = sp.column()
+                subcol.label(text="Vertex 2:")
+                subcol.prop(sc, "muv_align_uv_snap_edge_target_2", text="")
+                sp = compat.layout_split(sp, factor=1.0)
+                sp.operator(MUV_OT_AlignUV_Snap_SetEdgeTargetToEdgeCenter.bl_idname,
+                            text="", icon=compat.icon('UV_EDGESEL'))
 
         box = layout.box()
         box.prop(sc, "muv_smooth_uv_enabled", text="Smooth UV")
