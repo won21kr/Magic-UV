@@ -1170,6 +1170,13 @@ class MUV_OT_AlignUV_SnapToPoint(bpy.types.Operator):
     def execute(self, context):
         objs = common.get_uv_editable_objects(context)
 
+        group_to_reason = {
+            'VERT': "Vertex",
+            'FACE': "Face",
+            'UV_ISLAND': "UV Island",
+        }
+        no_selection_reason = group_to_reason[self.group]
+
         for obj in objs:
             bm = bmesh.from_edit_mesh(obj.data)
             if common.check_version(2, 73, 0) >= 0:
@@ -1182,6 +1189,7 @@ class MUV_OT_AlignUV_SnapToPoint(bpy.types.Operator):
                 # Process snap operation.
                 for l in target_loops:
                     l[uv_layer].uv = self.target
+                    no_selection_reason = None
 
             elif self.group == 'FACE':
                 target_faces = self._get_snap_target_faces(context, bm, uv_layer)
@@ -1196,6 +1204,7 @@ class MUV_OT_AlignUV_SnapToPoint(bpy.types.Operator):
                     # Process snap operation.
                     for l in face.loops:
                         l[uv_layer].uv += diff
+                        no_selection_reason = None
 
             elif self.group == 'UV_ISLAND':
                 target_islands = self._get_snap_target_islands(context, bm, uv_layer)
@@ -1215,8 +1224,16 @@ class MUV_OT_AlignUV_SnapToPoint(bpy.types.Operator):
                     for face in isl["faces"]:
                         for l in face["face"].loops:
                             l[uv_layer].uv += diff
+                            no_selection_reason = None
 
             bmesh.update_edit_mesh(obj.data)
+
+        if no_selection_reason:
+            self.report(
+                {'WARNING'},
+                "Must select more than 1 {}.".format(no_selection_reason)
+            )
+            return {'CANCELLED'}
 
         return {'FINISHED'}
 
@@ -1357,6 +1374,7 @@ class MUV_OT_AlignUV_SnapToEdge(bpy.types.Operator):
     def execute(self, context):
         objs = common.get_uv_editable_objects(context)
 
+        no_selection = True
         for obj in objs:
             bm = bmesh.from_edit_mesh(obj.data)
             if common.check_version(2, 73, 0) >= 0:
@@ -1373,6 +1391,8 @@ class MUV_OT_AlignUV_SnapToEdge(bpy.types.Operator):
                     # Process snap operation.
                     p[0][uv_layer].uv += diff
                     p[1][uv_layer].uv += diff
+
+                    no_selection = False
 
             elif self.group == 'FACE':
                 target_loop_pairs = self._get_snap_target_loop_pairs(context, bm, uv_layer)
@@ -1394,6 +1414,7 @@ class MUV_OT_AlignUV_SnapToEdge(bpy.types.Operator):
                     face_processed.append(face)
                     for l in face.loops:
                         l[uv_layer].uv += diff
+                        no_selection = False
 
             elif self.group == 'UV_ISLAND':
                 target_loop_pairs = self._get_snap_target_loop_pairs(context, bm, uv_layer)
@@ -1428,8 +1449,13 @@ class MUV_OT_AlignUV_SnapToEdge(bpy.types.Operator):
                     for f in target_isl["faces"]:
                         for l in f["face"].loops:
                             l[uv_layer].uv += diff
+                            no_selection = False
                 
             bmesh.update_edit_mesh(obj.data)
+
+        if no_selection:
+            self.report({'WARNING'}, "Must select more than 1 Edge.")
+            return {'CANCELLED'}
 
         return {'FINISHED'}
 
