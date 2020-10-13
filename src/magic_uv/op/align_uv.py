@@ -1128,7 +1128,8 @@ class MUV_OT_AlignUV_SnapToPoint(bpy.types.Operator):
         # Process snap operation.
         for face in selected_faces:
             for l in face.loops:
-                if context.tool_settings.use_uv_select_sync or l[uv_layer].select:
+                if context.tool_settings.use_uv_select_sync or \
+                        l[uv_layer].select:
                     target_loops.append(l)
 
         return target_loops
