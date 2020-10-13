@@ -49,7 +49,7 @@ class TestAlignUVSnapSetPointTargetToCursor(common.TestBase):
         self.assertSetEqual(result, {'FINISHED'})
 
 
-class TestAlignUVSnapSetPointTargetToCursor(common.TestBase):
+class TestAlignUVSnapSetPointTargetToVertexGroup(common.TestBase):
     module_name = "align_uv"
     submodule_name = "snap_set_point_target_to_vertex_group"
     idname = [

@@ -1130,7 +1130,7 @@ class MUV_OT_AlignUV_SnapToPoint(bpy.types.Operator):
             for l in face.loops:
                 if context.tool_settings.use_uv_select_sync or l[uv_layer].select:
                     target_loops.append(l)
-        
+
         return target_loops
 
     def _get_snap_target_faces(self, context, bm, uv_layer):
@@ -1144,7 +1144,7 @@ class MUV_OT_AlignUV_SnapToPoint(bpy.types.Operator):
                     break
             else:
                 target_faces.append(face)
-        
+
         return target_faces
 
     def _get_snap_target_islands(self, context, bm, uv_layer):
@@ -1337,10 +1337,10 @@ class MUV_OT_AlignUV_SnapToEdge(bpy.types.Operator):
     def _calc_snap_move_amount(self, loops, uv_layer):
         ave = (loops[0][uv_layer].uv + loops[1][uv_layer].uv) / 2
         target = (Vector(self.target_1) + Vector(self.target_2)) / 2
-        
+
         return target - ave
 
-    def _get_snap_target_loop_pairs(self, context, bm, uv_layer):
+    def _get_snap_target_loop_pairs(self, bm, uv_layer):
         target_loop_pairs = []
 
         selected_edges = [e for e in bm.edges if e.select]
@@ -1379,7 +1379,7 @@ class MUV_OT_AlignUV_SnapToEdge(bpy.types.Operator):
             uv_layer = bm.loops.layers.uv.verify()
 
             if self.group == 'EDGE':
-                target_loop_pairs = self._get_snap_target_loop_pairs(context, bm, uv_layer)
+                target_loop_pairs = self._get_snap_target_loop_pairs(bm, uv_layer)
 
                 for pair in target_loop_pairs:
                     p = list(pair)
@@ -1392,7 +1392,7 @@ class MUV_OT_AlignUV_SnapToEdge(bpy.types.Operator):
                     no_selection = False
 
             elif self.group == 'FACE':
-                target_loop_pairs = self._get_snap_target_loop_pairs(context, bm, uv_layer)
+                target_loop_pairs = self._get_snap_target_loop_pairs(bm, uv_layer)
 
                 face_processed = []
                 for pair in target_loop_pairs:
@@ -1414,14 +1414,14 @@ class MUV_OT_AlignUV_SnapToEdge(bpy.types.Operator):
                         no_selection = False
 
             elif self.group == 'UV_ISLAND':
-                target_loop_pairs = self._get_snap_target_loop_pairs(context, bm, uv_layer)
+                target_loop_pairs = self._get_snap_target_loop_pairs(bm, uv_layer)
 
                 islands = common.get_island_info_from_bmesh(
                     bm, only_selected=False)
 
                 isl_processed = []
                 for pair in target_loop_pairs:
-                    p = list(pair)                    
+                    p = list(pair)
                     diff = self._calc_snap_move_amount(p, uv_layer)
 
                     # Find island to process.
@@ -1447,7 +1447,7 @@ class MUV_OT_AlignUV_SnapToEdge(bpy.types.Operator):
                         for l in f["face"].loops:
                             l[uv_layer].uv += diff
                             no_selection = False
-                
+
             bmesh.update_edit_mesh(obj.data)
 
         if no_selection:
@@ -1467,7 +1467,7 @@ class MUV_OT_AlignUV_Snap_SetEdgeTargetToEdgeCenter(bpy.types.Operator):
                         'Align UV (Snap to Edge)'"""
     bl_options = {'REGISTER', 'UNDO'}
 
-    def _get_target_loop_pairs(self, context, bm, uv_layer):
+    def _get_target_loop_pairs(self, bm, uv_layer):
         target_loop_pairs = []
 
         selected_edges = [e for e in bm.edges if e.select]
@@ -1500,7 +1500,7 @@ class MUV_OT_AlignUV_Snap_SetEdgeTargetToEdgeCenter(bpy.types.Operator):
                 bm.faces.ensure_lookup_table()
             uv_layer = bm.loops.layers.uv.verify()
 
-            target_loop_pairs = self._get_target_loop_pairs(context, bm, uv_layer)
+            target_loop_pairs = self._get_target_loop_pairs(bm, uv_layer)
             for pair in target_loop_pairs:
                 p = list(pair)
                 uv_1 = p[0][uv_layer].uv
