@@ -135,7 +135,8 @@ class MUV_PT_UVEdit_UVManipulation(bpy.types.Panel):
 
             elif sc.muv_align_uv_snap_method == 'EDGE':
                 row = box.row(align=True)
-                ops = row.operator(MUV_OT_AlignUV_SnapToEdge.bl_idname, text="Snap to Edge")
+                ops = row.operator(MUV_OT_AlignUV_SnapToEdge.bl_idname,
+                                   text="Snap to Edge")
                 ops.group = sc.muv_align_uv_snap_edge_group
                 ops.target_1 = sc.muv_align_uv_snap_edge_target_1
                 ops.target_2 = sc.muv_align_uv_snap_edge_target_2
