@@ -1422,7 +1422,8 @@ class MUV_OT_AlignUV_SnapToEdge(bpy.types.Operator):
                         no_selection = False
 
             elif self.group == 'UV_ISLAND':
-                target_loop_pairs = self._get_snap_target_loop_pairs(bm, uv_layer)
+                target_loop_pairs = \
+                    self._get_snap_target_loop_pairs(bm, uv_layer)
 
                 islands = common.get_island_info_from_bmesh(
                     bm, only_selected=False)
@@ -1434,17 +1435,20 @@ class MUV_OT_AlignUV_SnapToEdge(bpy.types.Operator):
 
                     # Find island to process.
                     face = p[0].face
-                    target_isl = self._find_target_island_from_face(islands, face)
+                    target_isl = \
+                        self._find_target_island_from_face(islands, face)
                     if target_isl is None:
                         self.report(
                             {'WARNING'},
-                            "Failed to find island. (Object: {})".format(obj.name)
+                            "Failed to find island. (Object: {})"
+                            .format(obj.name)
                         )
                         return {'CANCELLED'}
                     if target_isl in isl_processed:
                         self.report(
                             {'WARNING'},
-                            "Must select only one edge per island. (Object: {})"
+                            """Must select only one edge per island. 
+                               (Object: {})"""
                             .format(obj.name)
                         )
                         return {'CANCELLED'}
