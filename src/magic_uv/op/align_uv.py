@@ -1447,7 +1447,7 @@ class MUV_OT_AlignUV_SnapToEdge(bpy.types.Operator):
                     if target_isl in isl_processed:
                         self.report(
                             {'WARNING'},
-                            """Must select only one edge per island. 
+                            """Must select only one edge per island.
                                (Object: {})"""
                             .format(obj.name)
                         )
