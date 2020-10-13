@@ -126,9 +126,9 @@ class MUV_PT_UVEdit_UVManipulation(bpy.types.Panel):
                 row = col.row(align=True)
                 row.prop(sc, "muv_align_uv_snap_point_target", text="")
                 row.operator(MUV_OT_AlignUV_Snap_SetPointTargetToCursor.bl_idname,
-                            text="", icon=compat.icon('CURSOR'))
+                             text="", icon=compat.icon('CURSOR'))
                 row.operator(MUV_OT_AlignUV_Snap_SetPointTargetToVertexGroup.bl_idname,
-                            text="", icon=compat.icon('UV_VERTEXSEL'))
+                             text="", icon=compat.icon('UV_VERTEXSEL'))
 
             elif sc.muv_align_uv_snap_method == 'EDGE':
                 row = box.row(align=True)
