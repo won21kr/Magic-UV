@@ -73,3 +73,27 @@ class TestAlignUVSnapSetPointTargetToVertexGroup(common.TestBase):
         bpy.ops.mesh.uv_texture_add()
         result = bpy.ops.uv.muv_align_uv_snap_set_point_target_to_vertex_group()
         self.assertSetEqual(result, {'FINISHED'})
+
+
+class TestAlignUVSnapToPoint(common.TestBase):
+    module_name = "align_uv"
+    submodule_name = "snap_to_point"
+    idname = [
+        ('OPERATOR', 'uv.muv_align_uv_snap_to_point'),
+    ]
+
+    def setUpEachMethod(self):
+        obj_name = "Cube"
+
+        common.select_object_only(obj_name)
+        compat.set_active_object(bpy.data.objects[obj_name])
+        bpy.ops.object.mode_set(mode='EDIT')
+
+        bpy.context.scene.tool_settings.use_uv_select_sync = True
+
+    def tearDownMethod(self):
+        bpy.context.scene.tool_settings.use_uv_select_sync = False
+
+    def test_ok(self):
+
+        self.assertSetEqual(result, {'FINISHED'})

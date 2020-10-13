@@ -1140,7 +1140,8 @@ class MUV_OT_AlignUV_SnapToPoint(bpy.types.Operator):
 
         for face in selected_faces:
             for l in face.loops:
-                if not context.tool_settings.use_uv_select_sync and not l[uv_layer].select:
+                if not context.tool_settings.use_uv_select_sync and \
+                        not l[uv_layer].select:
                     break
             else:
                 target_faces.append(face)
@@ -1156,7 +1157,8 @@ class MUV_OT_AlignUV_SnapToPoint(bpy.types.Operator):
             some_verts_not_selected = False
             for face in isl["faces"]:
                 for l in face["face"].loops:
-                    if not context.tool_settings.use_uv_select_sync and not l[uv_layer].select:
+                    if not context.tool_settings.use_uv_select_sync and \
+                            not l[uv_layer].select:
                         some_verts_not_selected = True
                         break
             if not some_verts_not_selected:
@@ -1181,7 +1183,8 @@ class MUV_OT_AlignUV_SnapToPoint(bpy.types.Operator):
             uv_layer = bm.loops.layers.uv.verify()
 
             if self.group == 'VERT':
-                target_loops = self._get_snap_target_loops(context, bm, uv_layer)
+                target_loops = \
+                    self._get_snap_target_loops(context, bm, uv_layer)
 
                 # Process snap operation.
                 for l in target_loops:
@@ -1189,7 +1192,8 @@ class MUV_OT_AlignUV_SnapToPoint(bpy.types.Operator):
                     no_selection_reason = None
 
             elif self.group == 'FACE':
-                target_faces = self._get_snap_target_faces(context, bm, uv_layer)
+                target_faces = \
+                    self._get_snap_target_faces(context, bm, uv_layer)
 
                 for face in target_faces:
                     ave_uv = Vector((0.0, 0.0))
@@ -1204,7 +1208,8 @@ class MUV_OT_AlignUV_SnapToPoint(bpy.types.Operator):
                         no_selection_reason = None
 
             elif self.group == 'UV_ISLAND':
-                target_islands = self._get_snap_target_islands(context, bm, uv_layer)
+                target_islands = \
+                    self._get_snap_target_islands(context, bm, uv_layer)
 
                 for isl in target_islands:
                     ave_uv = Vector((0.0, 0.0))
@@ -1282,7 +1287,8 @@ class MUV_OT_AlignUV_Snap_SetPointTargetToVertexGroup(bpy.types.Operator):
             selected_faces = [f for f in bm.faces if f.select]
             for face in selected_faces:
                 for l in face.loops:
-                    if context.tool_settings.use_uv_select_sync or l[uv_layer].select:
+                    if context.tool_settings.use_uv_select_sync or \
+                            l[uv_layer].select:
                         ave_uv += l[uv_layer].uv
                         count += 1
         if count != 0:
@@ -1379,7 +1385,8 @@ class MUV_OT_AlignUV_SnapToEdge(bpy.types.Operator):
             uv_layer = bm.loops.layers.uv.verify()
 
             if self.group == 'EDGE':
-                target_loop_pairs = self._get_snap_target_loop_pairs(bm, uv_layer)
+                target_loop_pairs = \
+                    self._get_snap_target_loop_pairs(bm, uv_layer)
 
                 for pair in target_loop_pairs:
                     p = list(pair)
@@ -1392,7 +1399,8 @@ class MUV_OT_AlignUV_SnapToEdge(bpy.types.Operator):
                     no_selection = False
 
             elif self.group == 'FACE':
-                target_loop_pairs = self._get_snap_target_loop_pairs(bm, uv_layer)
+                target_loop_pairs = \
+                    self._get_snap_target_loop_pairs(bm, uv_layer)
 
                 face_processed = []
                 for pair in target_loop_pairs:
