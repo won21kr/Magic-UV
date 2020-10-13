@@ -102,7 +102,8 @@ class MUV_MT_AlignUV(bpy.types.Menu):
 
         layout.label(text="Snap")
 
-        ops = layout.operator(MUV_OT_AlignUV_SnapToPoint.bl_idname, text="Snap to Point")
+        ops = layout.operator(MUV_OT_AlignUV_SnapToPoint.bl_idname,
+                              text="Snap to Point")
         ops.group = sc.muv_align_uv_snap_point_group
         ops.target = sc.muv_align_uv_snap_point_target
 
