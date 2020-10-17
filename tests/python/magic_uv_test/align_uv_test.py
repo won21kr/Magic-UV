@@ -142,3 +142,27 @@ class TestAlignUVSnapToPoint(common.TestBase):
 
         result = bpy.ops.uv.muv_align_uv_snap_to_point(group='VERTEX')
         self.assertSetEqual(result, {'FINISHED'})
+
+    def test_ok_face(self):
+        obj = bpy.context.active_object
+        bm = bmesh.from_edit_mesh(obj.data)
+
+        for f in bm.faces:
+            f.select = False
+        bm.faces[0].select = True
+
+        result = bpy.ops.uv.muv_align_uv_snap_to_point(
+            group='FACE', target=(0.5, 0.5))
+        self.assertSetEqual(result, {'FINISHED'})
+
+    def test_ok_uv_island(self):
+        obj = bpy.context.active_object
+        bm = bmesh.from_edit_mesh(obj.data)
+
+        for f in bm.faces:
+            f.select = False
+        bm.faces[0].select = True
+
+        result = bpy.ops.uv.muv_align_uv_snap_to_point(
+            group='UV_ISLAND')
+        self.assertSetEqual(result, {'FINISHED'})
