@@ -1,4 +1,8 @@
+import bpy
+import bmesh
+
 from . import common
+from . import compatibility as compat
 
 
 class TestAlignUVCircle(common.TestBase):
@@ -94,6 +98,35 @@ class TestAlignUVSnapToPoint(common.TestBase):
     def tearDownMethod(self):
         bpy.context.scene.tool_settings.use_uv_select_sync = False
 
-    def test_ok(self):
+    def test_ng_no_vertex(self):
+        # Warning: Must select more than 1 Vertex.
+        obj = bpy.context.active_object
+        bm = bmesh.from_edit_mesh(obj.data)
 
+        for f in bm.faces:
+            f.select = False
+
+        result = bpy.ops.uv.muv_align_uv_snap_to_point(group='VERTEX')
+        self.assertSetEqual(result, {'FINISHED'})
+
+    def test_ng_no_face(self):
+        # Warning: Must select more than 1 Face.
+        obj = bpy.context.active_object
+        bm = bmesh.from_edit_mesh(obj.data)
+
+        for f in bm.faces:
+            f.select = False
+
+        result = bpy.ops.uv.muv_align_uv_snap_to_point(group='FACE')
+        self.assertSetEqual(result, {'FINISHED'})
+
+    def test_ng_no_uv_island(self):
+        # Warning: Must select more than 1 UV Island.
+        obj = bpy.context.active_object
+        bm = bmesh.from_edit_mesh(obj.data)
+
+        for f in bm.faces:
+            f.select = False
+
+        result = bpy.ops.uv.muv_align_uv_snap_to_point(group='UV_ISLAND')
         self.assertSetEqual(result, {'FINISHED'})
