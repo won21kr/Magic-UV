@@ -48,9 +48,9 @@ class TestAlignUVSnapSetPointTargetToCursor(common.TestBase):
         ('OPERATOR', 'uv.muv_align_uv_snap_set_point_target_to_cursor'),
     ]
 
-    def test_ok(self):
-        result = bpy.ops.uv.muv_align_uv_snap_set_point_target_to_cursor()
-        self.assertSetEqual(result, {'FINISHED'})
+    # It is impossible to get cursor_location from the console.
+    def test_nothing(self):
+        pass
 
 
 class TestAlignUVSnapSetPointTargetToVertexGroup(common.TestBase):
@@ -117,7 +117,8 @@ class TestAlignUVSnapToPoint(common.TestBase):
         for f in bm.faces:
             f.select = False
 
-        result = bpy.ops.uv.muv_align_uv_snap_to_point(group='FACE')
+        result = bpy.ops.uv.muv_align_uv_snap_to_point(
+            group='FACE', target=(0.5, 0.5))
         self.assertSetEqual(result, {'FINISHED'})
 
     def test_ng_no_uv_island(self):
@@ -129,4 +130,15 @@ class TestAlignUVSnapToPoint(common.TestBase):
             f.select = False
 
         result = bpy.ops.uv.muv_align_uv_snap_to_point(group='UV_ISLAND')
+        self.assertSetEqual(result, {'FINISHED'})
+
+    def test_ok_vertex(self):
+        obj = bpy.context.active_object
+        bm = bmesh.from_edit_mesh(obj.data)
+
+        for f in bm.faces:
+            f.select = False
+        bm.faces[0].select = True
+
+        result = bpy.ops.uv.muv_align_uv_snap_to_point(group='VERTEX')
         self.assertSetEqual(result, {'FINISHED'})
