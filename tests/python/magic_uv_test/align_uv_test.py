@@ -1,3 +1,5 @@
+import unittest
+
 import bpy
 import bmesh
 
@@ -69,10 +71,12 @@ class TestAlignUVSnapSetPointTargetToVertexGroup(common.TestBase):
 
         bpy.context.scene.tool_settings.use_uv_select_sync = True
 
-    def tearDownMethod(self):
+    def tearDownEachMethod(self):
         bpy.context.scene.tool_settings.use_uv_select_sync = False
 
     def test_ok(self):
+        print("[TEST] (OK)")
+
         bpy.ops.mesh.select_all(action='SELECT')
         bpy.ops.mesh.uv_texture_add()
         result = bpy.ops.uv.muv_align_uv_snap_set_point_target_to_vertex_group()
@@ -95,15 +99,19 @@ class TestAlignUVSnapToPoint(common.TestBase):
 
         bpy.context.scene.tool_settings.use_uv_select_sync = True
 
-    def tearDownMethod(self):
+    def tearDownEachMethod(self):
         bpy.context.scene.tool_settings.use_uv_select_sync = False
 
     def test_ng_no_vertex(self):
+        print("[TEST] (NG) Vertex")
+
         # Warning: Must select more than 1 Vertex.
         obj = bpy.context.active_object
+        bpy.ops.mesh.select_all(action='SELECT')
+        bpy.ops.mesh.uv_texture_add()
+
         bm = bmesh.from_edit_mesh(obj.data)
         bm.faces.ensure_lookup_table()
-
         for f in bm.faces:
             f.select = False
         bmesh.update_edit_mesh(obj.data)
@@ -112,11 +120,15 @@ class TestAlignUVSnapToPoint(common.TestBase):
         self.assertSetEqual(result, {'CANCELLED'})
 
     def test_ng_no_face(self):
+        print("[TEST] (NG) Face")
+
         # Warning: Must select more than 1 Face.
         obj = bpy.context.active_object
+        bpy.ops.mesh.select_all(action='SELECT')
+        bpy.ops.mesh.uv_texture_add()
+
         bm = bmesh.from_edit_mesh(obj.data)
         bm.faces.ensure_lookup_table()
-
         for f in bm.faces:
             f.select = False
         bmesh.update_edit_mesh(obj.data)
@@ -126,11 +138,15 @@ class TestAlignUVSnapToPoint(common.TestBase):
         self.assertSetEqual(result, {'CANCELLED'})
 
     def test_ng_no_uv_island(self):
+        print("[TEST] (NG) UV Island")
+
         # Warning: Must select more than 1 UV Island.
         obj = bpy.context.active_object
+        bpy.ops.mesh.select_all(action='SELECT')
+        bpy.ops.mesh.uv_texture_add()
+
         bm = bmesh.from_edit_mesh(obj.data)
         bm.faces.ensure_lookup_table()
-
         for f in bm.faces:
             f.select = False
         bmesh.update_edit_mesh(obj.data)
@@ -139,10 +155,14 @@ class TestAlignUVSnapToPoint(common.TestBase):
         self.assertSetEqual(result, {'CANCELLED'})
 
     def test_ok_vertex(self):
+        print("[TEST] (OK) Vertex")
+
         obj = bpy.context.active_object
+        bpy.ops.mesh.select_all(action='SELECT')
+        bpy.ops.mesh.uv_texture_add()
+
         bm = bmesh.from_edit_mesh(obj.data)
         bm.faces.ensure_lookup_table()
-
         for f in bm.faces:
             f.select = False
         bm.faces[0].select = True
@@ -152,10 +172,14 @@ class TestAlignUVSnapToPoint(common.TestBase):
         self.assertSetEqual(result, {'FINISHED'})
 
     def test_ok_face(self):
+        print("[TEST] (OK) Face")
+
         obj = bpy.context.active_object
+        bpy.ops.mesh.select_all(action='SELECT')
+        bpy.ops.mesh.uv_texture_add()
+
         bm = bmesh.from_edit_mesh(obj.data)
         bm.faces.ensure_lookup_table()
-
         for f in bm.faces:
             f.select = False
         bm.faces[0].select = True
@@ -166,10 +190,14 @@ class TestAlignUVSnapToPoint(common.TestBase):
         self.assertSetEqual(result, {'FINISHED'})
 
     def test_ok_uv_island(self):
+        print("[TEST] (OK) UV Island")
+
         obj = bpy.context.active_object
+        bpy.ops.mesh.select_all(action='SELECT')
+        bpy.ops.mesh.uv_texture_add()
+
         bm = bmesh.from_edit_mesh(obj.data)
         bm.faces.ensure_lookup_table()
-
         for f in bm.faces:
             f.select = False
         bm.faces[0].select = True
@@ -177,6 +205,41 @@ class TestAlignUVSnapToPoint(common.TestBase):
 
         result = bpy.ops.uv.muv_align_uv_snap_to_point(
             group='UV_ISLAND')
+        self.assertSetEqual(result, {'FINISHED'})
+
+    @unittest.skipIf(compat.check_version(2, 80, 0) < 0,
+                     "Not supported in <2.80")
+    def test_ok_multiple_objects_vertex(self):
+        print("[TEST] (OK) Multiple Objects - Vertex")
+
+        # Duplicate object.
+        bpy.ops.object.mode_set(mode='OBJECT')
+        obj_names = ["Cube", "Cube.001"]
+        common.select_object_only(obj_names[0])
+        common.duplicate_object_without_uv()
+
+        for name in obj_names:
+            bpy.ops.object.mode_set(mode='OBJECT')
+            common.select_object_only(name)
+            compat.set_active_object(bpy.data.objects[name])
+            bpy.ops.object.mode_set(mode='EDIT')
+            bpy.ops.mesh.uv_texture_add()
+
+            obj = compat.get_active_object(bpy.context)
+            bm = bmesh.from_edit_mesh(obj.data)
+            bm.faces.ensure_lookup_table()
+            for f in bm.faces:
+                f.select = False
+            bm.faces[0].select = True
+            bmesh.update_edit_mesh(obj.data)
+
+        # Select two objects.
+        bpy.ops.object.mode_set(mode='OBJECT')
+        compat.set_active_object(bpy.data.objects[obj_names[0]])
+        common.select_objects_only(obj_names)
+        bpy.ops.object.mode_set(mode='EDIT')
+
+        result = bpy.ops.uv.muv_align_uv_snap_to_point(group='VERT')
         self.assertSetEqual(result, {'FINISHED'})
 
 
@@ -196,11 +259,14 @@ class TestAlignUVSnapSetEdgeTargetToEdgeCenter(common.TestBase):
 
         bpy.context.scene.tool_settings.use_uv_select_sync = True
 
-    def tearDownMethod(self):
+    def tearDownEachMethod(self):
         bpy.context.scene.tool_settings.use_uv_select_sync = False
 
     def test_ok(self):
+        print("[TEST] (OK)")
+
         bpy.ops.mesh.select_all(action='SELECT')
         bpy.ops.mesh.uv_texture_add()
+
         result = bpy.ops.uv.muv_align_uv_snap_set_edge_target_to_edge_center()
         self.assertSetEqual(result, {'FINISHED'})
