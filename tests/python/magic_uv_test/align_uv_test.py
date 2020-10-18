@@ -82,6 +82,34 @@ class TestAlignUVSnapSetPointTargetToVertexGroup(common.TestBase):
         result = bpy.ops.uv.muv_align_uv_snap_set_point_target_to_vertex_group()
         self.assertSetEqual(result, {'FINISHED'})
 
+    @unittest.skipIf(compat.check_version(2, 80, 0) < 0,
+                     "Not supported in <2.80")
+    def test_ok_multiple_objects(self):
+        print("[TEST] (OK) Multiple Objects")
+
+        # Duplicate object.
+        bpy.ops.object.mode_set(mode='OBJECT')
+        obj_names = ["Cube", "Cube.001"]
+        common.select_object_only(obj_names[0])
+        common.duplicate_object_without_uv()
+
+        for name in obj_names:
+            bpy.ops.object.mode_set(mode='OBJECT')
+            common.select_object_only(name)
+            compat.set_active_object(bpy.data.objects[name])
+            bpy.ops.object.mode_set(mode='EDIT')
+            bpy.ops.mesh.uv_texture_add()
+            bpy.ops.mesh.select_all(action='SELECT')
+
+        # Select two objects.
+        bpy.ops.object.mode_set(mode='OBJECT')
+        compat.set_active_object(bpy.data.objects[obj_names[0]])
+        common.select_objects_only(obj_names)
+        bpy.ops.object.mode_set(mode='EDIT')
+
+        result = bpy.ops.uv.muv_align_uv_snap_set_point_target_to_vertex_group()
+        self.assertSetEqual(result, {'FINISHED'})
+
 
 class TestAlignUVSnapToPoint(common.TestBase):
     module_name = "align_uv"
@@ -243,6 +271,78 @@ class TestAlignUVSnapToPoint(common.TestBase):
         self.assertSetEqual(result, {'FINISHED'})
 
 
+    @unittest.skipIf(compat.check_version(2, 80, 0) < 0,
+                     "Not supported in <2.80")
+    def test_ok_multiple_objects_face(self):
+        print("[TEST] (OK) Multiple Objects - Face")
+
+        # Duplicate object.
+        bpy.ops.object.mode_set(mode='OBJECT')
+        obj_names = ["Cube", "Cube.001"]
+        common.select_object_only(obj_names[0])
+        common.duplicate_object_without_uv()
+
+        for name in obj_names:
+            bpy.ops.object.mode_set(mode='OBJECT')
+            common.select_object_only(name)
+            compat.set_active_object(bpy.data.objects[name])
+            bpy.ops.object.mode_set(mode='EDIT')
+            bpy.ops.mesh.uv_texture_add()
+
+            obj = compat.get_active_object(bpy.context)
+            bm = bmesh.from_edit_mesh(obj.data)
+            bm.faces.ensure_lookup_table()
+            for f in bm.faces:
+                f.select = False
+            bm.faces[0].select = True
+            bmesh.update_edit_mesh(obj.data)
+
+        # Select two objects.
+        bpy.ops.object.mode_set(mode='OBJECT')
+        compat.set_active_object(bpy.data.objects[obj_names[0]])
+        common.select_objects_only(obj_names)
+        bpy.ops.object.mode_set(mode='EDIT')
+
+        result = bpy.ops.uv.muv_align_uv_snap_to_point(group='FACE')
+        self.assertSetEqual(result, {'FINISHED'})
+
+
+    @unittest.skipIf(compat.check_version(2, 80, 0) < 0,
+                     "Not supported in <2.80")
+    def test_ok_multiple_objects_uv_island(self):
+        print("[TEST] (OK) Multiple Objects - UV Island")
+
+        # Duplicate object.
+        bpy.ops.object.mode_set(mode='OBJECT')
+        obj_names = ["Cube", "Cube.001"]
+        common.select_object_only(obj_names[0])
+        common.duplicate_object_without_uv()
+
+        for name in obj_names:
+            bpy.ops.object.mode_set(mode='OBJECT')
+            common.select_object_only(name)
+            compat.set_active_object(bpy.data.objects[name])
+            bpy.ops.object.mode_set(mode='EDIT')
+            bpy.ops.mesh.uv_texture_add()
+
+            obj = compat.get_active_object(bpy.context)
+            bm = bmesh.from_edit_mesh(obj.data)
+            bm.faces.ensure_lookup_table()
+            for f in bm.faces:
+                f.select = False
+            bm.faces[0].select = True
+            bmesh.update_edit_mesh(obj.data)
+
+        # Select two objects.
+        bpy.ops.object.mode_set(mode='OBJECT')
+        compat.set_active_object(bpy.data.objects[obj_names[0]])
+        common.select_objects_only(obj_names)
+        bpy.ops.object.mode_set(mode='EDIT')
+
+        result = bpy.ops.uv.muv_align_uv_snap_to_point(group='UV_ISLAND')
+        self.assertSetEqual(result, {'FINISHED'})
+
+
 class TestAlignUVSnapSetEdgeTargetToEdgeCenter(common.TestBase):
     module_name = "align_uv"
     submodule_name = "snap_set_edge_target_to_edge_center"
@@ -267,6 +367,34 @@ class TestAlignUVSnapSetEdgeTargetToEdgeCenter(common.TestBase):
 
         bpy.ops.mesh.select_all(action='SELECT')
         bpy.ops.mesh.uv_texture_add()
+
+        result = bpy.ops.uv.muv_align_uv_snap_set_edge_target_to_edge_center()
+        self.assertSetEqual(result, {'FINISHED'})
+
+    @unittest.skipIf(compat.check_version(2, 80, 0) < 0,
+                     "Not supported in <2.80")
+    def test_ok_multiple_objects(self):
+        print("[TEST] (OK) Multiple Objects")
+
+        # Duplicate object.
+        bpy.ops.object.mode_set(mode='OBJECT')
+        obj_names = ["Cube", "Cube.001"]
+        common.select_object_only(obj_names[0])
+        common.duplicate_object_without_uv()
+
+        for name in obj_names:
+            bpy.ops.object.mode_set(mode='OBJECT')
+            common.select_object_only(name)
+            compat.set_active_object(bpy.data.objects[name])
+            bpy.ops.object.mode_set(mode='EDIT')
+            bpy.ops.mesh.uv_texture_add()
+            bpy.ops.mesh.select_all(action='SELECT')
+
+        # Select two objects.
+        bpy.ops.object.mode_set(mode='OBJECT')
+        compat.set_active_object(bpy.data.objects[obj_names[0]])
+        common.select_objects_only(obj_names)
+        bpy.ops.object.mode_set(mode='EDIT')
 
         result = bpy.ops.uv.muv_align_uv_snap_set_edge_target_to_edge_center()
         self.assertSetEqual(result, {'FINISHED'})
