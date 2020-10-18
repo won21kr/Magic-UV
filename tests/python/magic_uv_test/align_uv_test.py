@@ -108,7 +108,7 @@ class TestAlignUVSnapToPoint(common.TestBase):
             f.select = False
         bmesh.update_edit_mesh(obj.data)
 
-        result = bpy.ops.uv.muv_align_uv_snap_to_point(group='VERTEX')
+        result = bpy.ops.uv.muv_align_uv_snap_to_point(group='VERT')
         self.assertSetEqual(result, {'CANCELLED'})
 
     def test_ng_no_face(self):
@@ -148,7 +148,7 @@ class TestAlignUVSnapToPoint(common.TestBase):
         bm.faces[0].select = True
         bmesh.update_edit_mesh(obj.data)
 
-        result = bpy.ops.uv.muv_align_uv_snap_to_point(group='VERTEX')
+        result = bpy.ops.uv.muv_align_uv_snap_to_point(group='VERT')
         self.assertSetEqual(result, {'FINISHED'})
 
     def test_ok_face(self):
