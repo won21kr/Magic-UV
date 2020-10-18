@@ -134,7 +134,7 @@ class TestAlignUVSnapToPoint(common.TestBase):
         print("[TEST] (NG) Vertex")
 
         # Warning: Must select more than 1 Vertex.
-        obj = bpy.context.active_object
+        obj = compat.get_active_object(bpy.context)
         bpy.ops.mesh.select_all(action='SELECT')
         bpy.ops.mesh.uv_texture_add()
 
@@ -151,7 +151,7 @@ class TestAlignUVSnapToPoint(common.TestBase):
         print("[TEST] (NG) Face")
 
         # Warning: Must select more than 1 Face.
-        obj = bpy.context.active_object
+        obj = compat.get_active_object(bpy.context)
         bpy.ops.mesh.select_all(action='SELECT')
         bpy.ops.mesh.uv_texture_add()
 
@@ -169,7 +169,7 @@ class TestAlignUVSnapToPoint(common.TestBase):
         print("[TEST] (NG) UV Island")
 
         # Warning: Must select more than 1 UV Island.
-        obj = bpy.context.active_object
+        obj = compat.get_active_object(bpy.context)
         bpy.ops.mesh.select_all(action='SELECT')
         bpy.ops.mesh.uv_texture_add()
 
@@ -185,7 +185,7 @@ class TestAlignUVSnapToPoint(common.TestBase):
     def test_ok_vertex(self):
         print("[TEST] (OK) Vertex")
 
-        obj = bpy.context.active_object
+        obj = compat.get_active_object(bpy.context)
         bpy.ops.mesh.select_all(action='SELECT')
         bpy.ops.mesh.uv_texture_add()
 
@@ -202,7 +202,7 @@ class TestAlignUVSnapToPoint(common.TestBase):
     def test_ok_face(self):
         print("[TEST] (OK) Face")
 
-        obj = bpy.context.active_object
+        obj = compat.get_active_object(bpy.context)
         bpy.ops.mesh.select_all(action='SELECT')
         bpy.ops.mesh.uv_texture_add()
 
@@ -220,7 +220,7 @@ class TestAlignUVSnapToPoint(common.TestBase):
     def test_ok_uv_island(self):
         print("[TEST] (OK) UV Island")
 
-        obj = bpy.context.active_object
+        obj = compat.get_active_object(bpy.context)
         bpy.ops.mesh.select_all(action='SELECT')
         bpy.ops.mesh.uv_texture_add()
 
@@ -398,3 +398,40 @@ class TestAlignUVSnapSetEdgeTargetToEdgeCenter(common.TestBase):
 
         result = bpy.ops.uv.muv_align_uv_snap_set_edge_target_to_edge_center()
         self.assertSetEqual(result, {'FINISHED'})
+
+
+class TestAlignUVSnapToEdge(common.TestBase):
+    module_name = "align_uv"
+    submodule_name = "snap_to_edge"
+    idname = [
+        ('OPERATOR', 'uv.muv_align_uv_snap_to_edge'),
+    ]
+
+    def setUpEachMethod(self):
+        obj_name = "Cube"
+
+        common.select_object_only(obj_name)
+        compat.set_active_object(bpy.data.objects[obj_name])
+        bpy.ops.object.mode_set(mode='EDIT')
+
+        bpy.context.scene.tool_settings.use_uv_select_sync = True
+
+    def tearDownEachMethod(self):
+        bpy.context.scene.tool_settings.use_uv_select_sync = False
+
+    def test_ng_no_vertex(self):
+        print("[TEST] (NG) No selected edge")
+
+        # Warning: Must select more than 1 Edge.
+        obj = compat.get_active_object(bpy.context)
+        bpy.ops.mesh.select_all(action='SELECT')
+        bpy.ops.mesh.uv_texture_add()
+
+        bm = bmesh.from_edit_mesh(obj.data)
+        bm.faces.ensure_lookup_table()
+        for f in bm.faces:
+            f.select = False
+        bmesh.update_edit_mesh(obj.data)
+
+        result = bpy.ops.uv.muv_align_uv_snap_to_edge(group='EDGE')
+        self.assertSetEqual(result, {'CANCELLED'})

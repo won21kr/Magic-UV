@@ -1329,7 +1329,6 @@ class MUV_OT_AlignUV_SnapToEdge(bpy.types.Operator):
         step=1,
         default=(0.000, 0.000),
     )
-
     target_2 = FloatVectorProperty(
         name="Snap Target 2",
         description="Vertex 2 of the target edge",

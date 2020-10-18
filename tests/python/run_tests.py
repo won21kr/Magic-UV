@@ -16,6 +16,7 @@ def test_main():
         magic_uv_test.align_uv_test.TestAlignUVSnapSetPointTargetToVertexGroup,
         magic_uv_test.align_uv_test.TestAlignUVSnapToPoint,
         magic_uv_test.align_uv_test.TestAlignUVSnapSetEdgeTargetToEdgeCenter,
+        magic_uv_test.align_uv_test.TestAlignUVSnapToEdge,
         magic_uv_test.align_uv_cursor_test.TestAlignUVCursor,
         magic_uv_test.clip_uv_test.TestClipUV,
         magic_uv_test.copy_paste_uv_test.TestCopyPasteUV,
