@@ -102,8 +102,7 @@ class TestAlignUVSnapToPoint(common.TestBase):
         # Warning: Must select more than 1 Vertex.
         obj = bpy.context.active_object
         bm = bmesh.from_edit_mesh(obj.data)
-        if common.check_version(2, 73, 0) >= 0:
-            bm.faces.ensure_lookup_table()
+        bm.faces.ensure_lookup_table()
 
         for f in bm.faces:
             f.select = False
@@ -116,8 +115,7 @@ class TestAlignUVSnapToPoint(common.TestBase):
         # Warning: Must select more than 1 Face.
         obj = bpy.context.active_object
         bm = bmesh.from_edit_mesh(obj.data)
-        if common.check_version(2, 73, 0) >= 0:
-            bm.faces.ensure_lookup_table()
+        bm.faces.ensure_lookup_table()
 
         for f in bm.faces:
             f.select = False
@@ -131,8 +129,7 @@ class TestAlignUVSnapToPoint(common.TestBase):
         # Warning: Must select more than 1 UV Island.
         obj = bpy.context.active_object
         bm = bmesh.from_edit_mesh(obj.data)
-        if common.check_version(2, 73, 0) >= 0:
-            bm.faces.ensure_lookup_table()
+        bm.faces.ensure_lookup_table()
 
         for f in bm.faces:
             f.select = False
@@ -144,8 +141,7 @@ class TestAlignUVSnapToPoint(common.TestBase):
     def test_ok_vertex(self):
         obj = bpy.context.active_object
         bm = bmesh.from_edit_mesh(obj.data)
-        if common.check_version(2, 73, 0) >= 0:
-            bm.faces.ensure_lookup_table()
+        bm.faces.ensure_lookup_table()
 
         for f in bm.faces:
             f.select = False
@@ -158,8 +154,7 @@ class TestAlignUVSnapToPoint(common.TestBase):
     def test_ok_face(self):
         obj = bpy.context.active_object
         bm = bmesh.from_edit_mesh(obj.data)
-        if common.check_version(2, 73, 0) >= 0:
-            bm.faces.ensure_lookup_table()
+        bm.faces.ensure_lookup_table()
 
         for f in bm.faces:
             f.select = False
@@ -173,8 +168,7 @@ class TestAlignUVSnapToPoint(common.TestBase):
     def test_ok_uv_island(self):
         obj = bpy.context.active_object
         bm = bmesh.from_edit_mesh(obj.data)
-        if common.check_version(2, 73, 0) >= 0:
-            bm.faces.ensure_lookup_table()
+        bm.faces.ensure_lookup_table()
 
         for f in bm.faces:
             f.select = False
