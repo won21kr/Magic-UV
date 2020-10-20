@@ -568,3 +568,80 @@ class TestAlignUVSnapToEdge(common.TestBase):
 
         result = bpy.ops.uv.muv_align_uv_snap_to_edge(group='EDGE')
         self.assertSetEqual(result, {'FINISHED'})
+
+    @unittest.skipIf(compat.check_version(2, 80, 0) < 0,
+                     "Not supported in <2.80")
+    def test_ok_multiple_objects_face(self):
+        print("[TEST] (OK) Multiple Objects - Face")
+
+        # Duplicate object.
+        bpy.ops.object.mode_set(mode='OBJECT')
+        obj_names = ["Cube", "Cube.001"]
+        common.select_object_only(obj_names[0])
+        common.duplicate_object_without_uv()
+
+        for name in obj_names:
+            bpy.ops.object.mode_set(mode='OBJECT')
+            common.select_object_only(name)
+            compat.set_active_object(bpy.data.objects[name])
+            bpy.ops.object.mode_set(mode='EDIT')
+            bpy.ops.mesh.uv_texture_add()
+
+            obj = compat.get_active_object(bpy.context)
+            bm = bmesh.from_edit_mesh(obj.data)
+            uv_layer = bm.loops.layers.uv.verify()
+            bm.edges.ensure_lookup_table()
+            for e in bm.edges:
+                e.select = False
+            bm.edges[0].select = True
+            bm.edges[0].link_loops[0][uv_layer].select = True
+            bm.edges[0].link_loops[0].link_loop_next[uv_layer].select = True
+            bmesh.update_edit_mesh(obj.data)
+
+        # Select two objects.
+        bpy.ops.object.mode_set(mode='OBJECT')
+        compat.set_active_object(bpy.data.objects[obj_names[0]])
+        common.select_objects_only(obj_names)
+        bpy.ops.object.mode_set(mode='EDIT')
+
+        result = bpy.ops.uv.muv_align_uv_snap_to_edge(group='FACE')
+        self.assertSetEqual(result, {'FINISHED'})
+
+    @unittest.skipIf(compat.check_version(2, 80, 0) < 0,
+                     "Not supported in <2.80")
+    def test_ok_multiple_objects_uv_island(self):
+        print("[TEST] (OK) Multiple Objects - UV Island")
+
+        # Duplicate object.
+        bpy.ops.object.mode_set(mode='OBJECT')
+        obj_names = ["Cube", "Cube.001"]
+        common.select_object_only(obj_names[0])
+        common.duplicate_object_without_uv()
+
+        for name in obj_names:
+            bpy.ops.object.mode_set(mode='OBJECT')
+            common.select_object_only(name)
+            compat.set_active_object(bpy.data.objects[name])
+            bpy.ops.object.mode_set(mode='EDIT')
+            bpy.ops.mesh.uv_texture_add()
+
+            obj = compat.get_active_object(bpy.context)
+            bm = bmesh.from_edit_mesh(obj.data)
+            uv_layer = bm.loops.layers.uv.verify()
+            bm.edges.ensure_lookup_table()
+            for e in bm.edges:
+                e.select = False
+            bm.edges[0].select = True
+            bm.edges[0].link_loops[0][uv_layer].select = True
+            bm.edges[0].link_loops[0].link_loop_next[uv_layer].select = True
+            bmesh.update_edit_mesh(obj.data)
+
+        # Select two objects.
+        bpy.ops.object.mode_set(mode='OBJECT')
+        compat.set_active_object(bpy.data.objects[obj_names[0]])
+        common.select_objects_only(obj_names)
+        bpy.ops.object.mode_set(mode='EDIT')
+
+        result = bpy.ops.uv.muv_align_uv_snap_to_edge(
+            group='UV_ISLAND', target_1=(0.2, 0.1), target_2=(0.4, 0.6))
+        self.assertSetEqual(result, {'FINISHED'})
