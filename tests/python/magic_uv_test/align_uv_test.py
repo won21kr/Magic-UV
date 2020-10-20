@@ -478,7 +478,7 @@ class TestAlignUVSnapToEdge(common.TestBase):
         bpy.ops.mesh.uv_texture_add()
 
         bm = bmesh.from_edit_mesh(obj.data)
-        bm.faces.ensure_lookup_table()
+        bm.edges.ensure_lookup_table()
         for e in bm.edges:
             e.select = False
         bm.edges[0].select = True
