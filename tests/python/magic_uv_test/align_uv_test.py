@@ -231,8 +231,7 @@ class TestAlignUVSnapToPoint(common.TestBase):
         bm.faces[0].select = True
         bmesh.update_edit_mesh(obj.data)
 
-        result = bpy.ops.uv.muv_align_uv_snap_to_point(
-            group='UV_ISLAND')
+        result = bpy.ops.uv.muv_align_uv_snap_to_point(group='UV_ISLAND')
         self.assertSetEqual(result, {'FINISHED'})
 
     @unittest.skipIf(compat.check_version(2, 80, 0) < 0,
@@ -339,7 +338,8 @@ class TestAlignUVSnapToPoint(common.TestBase):
         common.select_objects_only(obj_names)
         bpy.ops.object.mode_set(mode='EDIT')
 
-        result = bpy.ops.uv.muv_align_uv_snap_to_point(group='UV_ISLAND')
+        result = bpy.ops.uv.muv_align_uv_snap_to_point(
+            group='UV_ISLAND', target=(0.5, 0.5))
         self.assertSetEqual(result, {'FINISHED'})
 
 
@@ -528,8 +528,7 @@ class TestAlignUVSnapToEdge(common.TestBase):
         bm.edges[0].link_loops[0].link_loop_next[uv_layer].select = True
         bmesh.update_edit_mesh(obj.data)
 
-        result = bpy.ops.uv.muv_align_uv_snap_to_edge(
-            group='UV_ISLAND', target_1=(0.2, 0.1), target_2=(0.4, 0.6))
+        result = bpy.ops.uv.muv_align_uv_snap_to_edge(group='UV_ISLAND')
         self.assertSetEqual(result, {'FINISHED'})
 
     @unittest.skipIf(compat.check_version(2, 80, 0) < 0,
@@ -567,5 +566,5 @@ class TestAlignUVSnapToEdge(common.TestBase):
         common.select_objects_only(obj_names)
         bpy.ops.object.mode_set(mode='EDIT')
 
-        result = bpy.ops.uv.muv_align_uv_snap_to_point(group='EDGE')
+        result = bpy.ops.uv.muv_align_uv_snap_to_edge(group='EDGE')
         self.assertSetEqual(result, {'FINISHED'})
