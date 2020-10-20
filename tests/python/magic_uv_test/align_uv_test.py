@@ -469,3 +469,20 @@ class TestAlignUVSnapToEdge(common.TestBase):
 
         result = bpy.ops.uv.muv_align_uv_snap_to_edge(group='UV_ISLAND')
         self.assertSetEqual(result, {'CANCELLED'})
+
+    def test_ok_edge(self):
+        print("[TEST] (OK) Edge")
+
+        obj = compat.get_active_object(bpy.context)
+        bpy.ops.mesh.select_all(action='SELECT')
+        bpy.ops.mesh.uv_texture_add()
+
+        bm = bmesh.from_edit_mesh(obj.data)
+        bm.faces.ensure_lookup_table()
+        for e in bm.edges:
+            e.select = False
+        bm.edges[0].select = True
+        bmesh.update_edit_mesh(obj.data)
+
+        result = bpy.ops.uv.muv_align_uv_snap_to_edge(group='EDGE')
+        self.assertSetEqual(result, {'FINISHED'})
