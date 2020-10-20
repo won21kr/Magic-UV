@@ -419,7 +419,7 @@ class TestAlignUVSnapToEdge(common.TestBase):
     def tearDownEachMethod(self):
         bpy.context.scene.tool_settings.use_uv_select_sync = False
 
-    def test_ng_no_vertex(self):
+    def test_ng_no_edge(self):
         print("[TEST] (NG) No selected edge")
 
         # Warning: Must select more than 1 Edge.
@@ -434,4 +434,38 @@ class TestAlignUVSnapToEdge(common.TestBase):
         bmesh.update_edit_mesh(obj.data)
 
         result = bpy.ops.uv.muv_align_uv_snap_to_edge(group='EDGE')
+        self.assertSetEqual(result, {'CANCELLED'})
+
+    def test_ng_no_face(self):
+        print("[TEST] (NG) No selected face")
+
+        # Warning: Must select more than 1 Edge.
+        obj = compat.get_active_object(bpy.context)
+        bpy.ops.mesh.select_all(action='SELECT')
+        bpy.ops.mesh.uv_texture_add()
+
+        bm = bmesh.from_edit_mesh(obj.data)
+        bm.faces.ensure_lookup_table()
+        for f in bm.faces:
+            f.select = False
+        bmesh.update_edit_mesh(obj.data)
+
+        result = bpy.ops.uv.muv_align_uv_snap_to_edge(group='FACE')
+        self.assertSetEqual(result, {'CANCELLED'})
+
+    def test_ng_no_uv_island(self):
+        print("[TEST] (NG) No selected UV Island")
+
+        # Warning: Must select more than 1 Edge.
+        obj = compat.get_active_object(bpy.context)
+        bpy.ops.mesh.select_all(action='SELECT')
+        bpy.ops.mesh.uv_texture_add()
+
+        bm = bmesh.from_edit_mesh(obj.data)
+        bm.faces.ensure_lookup_table()
+        for f in bm.faces:
+            f.select = False
+        bmesh.update_edit_mesh(obj.data)
+
+        result = bpy.ops.uv.muv_align_uv_snap_to_edge(group='UV_ISLAND')
         self.assertSetEqual(result, {'CANCELLED'})
