@@ -504,7 +504,7 @@ class TestAlignUVSnapToEdge(common.TestBase):
             e.select = False
         bm.edges[0].select = True
         bm.edges[0].link_loops[0][uv_layer].select = True
-#        bm.edges[0].link_loops[0].link_loop_next[uv_layer].select = True
+        bm.edges[0].link_loops[0].link_loop_next[uv_layer].select = True
         bmesh.update_edit_mesh(obj.data)
 
         result = bpy.ops.uv.muv_align_uv_snap_to_edge(
